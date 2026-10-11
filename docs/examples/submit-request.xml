@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://example.org/scoring/v1">
+  <soap:Body>
+    <tns:SubmitApplicationRequest>
+      <tns:requestId>3f2b8c1e-5d7a-4e9b-9c1d-2a6f8e0b7c4d</tns:requestId>
+      <tns:inn>7712345671</tns:inn>
+      <tns:companyName>ООО «Ромашка»</tns:companyName>
+      <tns:assetType>CAR</tns:assetType>
+      <tns:amount>3000000</tns:amount>
+      <tns:advancePercent>20</tns:advancePercent>
+      <tns:termMonths>36</tns:termMonths>
+    </tns:SubmitApplicationRequest>
+  </soap:Body>
+</soap:Envelope>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://example.org/scoring/v1">
+  <soap:Body>
+    <soap:Fault>
+      <faultcode>soap:Client</faultcode>
+      <faultstring>ИНН не найден в ЕГРЮЛ</faultstring>
+      <detail>
+        <tns:ScoringFault>
+          <tns:code>VALIDATION</tns:code>
+          <tns:field>inn</tns:field>
+          <tns:message>ИНН не найден в ЕГРЮЛ</tns:message>
+        </tns:ScoringFault>
+      </detail>
+    </soap:Fault>
+  </soap:Body>
+</soap:Envelope>

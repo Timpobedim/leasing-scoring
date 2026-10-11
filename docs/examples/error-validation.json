@@ -1,0 +1,5 @@
+{
+  "error": "validation",
+  "field": "inn",
+  "message": "ИНН не найден в ЕГРЮЛ"
+}

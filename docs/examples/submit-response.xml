@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://example.org/scoring/v1">
+  <soap:Body>
+    <tns:SubmitApplicationResponse>
+      <tns:applicationId>SC-00000001</tns:applicationId>
+      <tns:status>RECEIVED</tns:status>
+      <tns:duplicate>false</tns:duplicate>
+    </tns:SubmitApplicationResponse>
+  </soap:Body>
+</soap:Envelope>

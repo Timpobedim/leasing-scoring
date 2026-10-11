@@ -1,0 +1,37 @@
+@startuml activity-submit
+' Диаграмма деятельности: обработка POST /api/v1/applications.
+' req: FR-01 FR-02 FR-03 FR-04 FR-05 FR-06
+skinparam shadowing false
+
+start
+:Получить заявку и Idempotency-Key;
+if (Поля и ИНН верны?) then (да)
+else (нет)
+  :Ответить 422 с именем поля;
+  stop
+endif
+if (Ключ уже встречался?) then (нет)
+else (да)
+  if (Данные те же?) then (нет)
+    :Ответить 409;
+    stop
+  else (да)
+    :Вернуть ту же заявку\nбез обращения к банку;
+    stop
+  endif
+endif
+:Завести заявку в статусе NEW;
+:SubmitApplication(requestId = ключ);
+switch (Ответ банка)
+case (принята)
+  :SENT, сохранить номер банка;
+  :Ответить 202;
+case (Fault VALIDATION)
+  :INVALID, сохранить поле и текст;
+  :Ответить 422 с полем из Fault;
+case (таймаут, 5xx, нет связи)
+  :WAITING_RETRY;
+  :Ответить 202 со статусом WAITING_RETRY;
+endswitch
+stop
+@enduml

@@ -1,0 +1,149 @@
+openapi: 3.1.0
+info:
+  title: Шлюз заявок на лизинг
+  version: 1.0.0
+  description: |
+    REST-шлюз между CRM лизинговой компании и SOAP-сервисом скоринга банка-партнёра.
+    Требования — docs/srs.md. Ограничения полей совпадают с api/scoring.xsd (NFR-03).
+servers:
+  - url: http://127.0.0.1:8000
+paths:
+  /api/v1/applications:
+    post:
+      operationId: createApplication
+      summary: Подать заявку (FR-01, FR-02, FR-03, FR-04, FR-05, FR-06)
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: UUID; тот же ключ при повторе не создаёт вторую заявку ни в шлюзе, ни в банке
+          schema:
+            $ref: "#/components/schemas/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationIn"
+      responses:
+        "202":
+          description: Заявка принята; решение банка — асинхронно, смотреть GET
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationOut"
+        "409":
+          description: Тот же Idempotency-Key, но другие данные заявки
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Поле не прошло проверку — шлюза или банка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/applications/{id}:
+    get:
+      operationId: getApplication
+      summary: Статус заявки и решение банка (FR-07, FR-08)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^LA-[0-9]{6}$"
+      responses:
+        "200":
+          description: Заявка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationOut"
+        "404":
+          description: Заявки нет
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    RequestId:
+      type: string
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    ApplicationIn:
+      type: object
+      additionalProperties: false
+      required: [inn, companyName, assetType, amount, advancePercent, termMonths]
+      properties:
+        inn:
+          type: string
+          pattern: "^[0-9]{10}$"
+          description: ИНН юрлица; контрольная цифра проверяется шлюзом (FR-02)
+        companyName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        assetType:
+          type: string
+          enum: [CAR, TRUCK, EQUIPMENT]
+        amount:
+          type: integer
+          minimum: 100000
+          maximum: 50000000
+          description: Стоимость предмета лизинга, целые рубли
+        advancePercent:
+          type: integer
+          minimum: 10
+          maximum: 49
+        termMonths:
+          type: integer
+          minimum: 12
+          maximum: 60
+    ApplicationOut:
+      type: object
+      additionalProperties: false
+      required: [id, status, attempts]
+      properties:
+        id:
+          type: string
+          pattern: "^LA-[0-9]{6}$"
+        status:
+          type: string
+          enum: [NEW, SENT, APPROVED, DECLINED, INVALID, WAITING_RETRY, FAILED]
+        bankId:
+          type: [string, "null"]
+          pattern: "^SC-[0-9]{8}$"
+        attempts:
+          type: integer
+          minimum: 0
+        decision:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/Decision"
+    Decision:
+      type: object
+      additionalProperties: false
+      required: [approvedAmount, ratePercent, reasonCode]
+      properties:
+        approvedAmount:
+          type: [integer, "null"]
+        ratePercent:
+          type: [number, "null"]
+        reasonCode:
+          type: [string, "null"]
+          enum: [STOP_LIST, ADVANCE_TOO_LOW, TERM_TOO_LONG, null]
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum: [validation, conflict, not_found]
+        field:
+          type: [string, "null"]
+        message:
+          type: string

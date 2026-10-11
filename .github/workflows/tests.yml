@@ -1,0 +1,34 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Зависимости
+        run: uv sync --group dev
+
+      - name: Линтер и типы
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run mypy
+
+      # Тесты сверяют матрицу трассировки, SVG диаграмм и три контракта:
+      # устаревший документ роняет сборку так же, как сломанный код.
+      - name: Тесты
+        run: uv run pytest -q
+
+      - name: Демонстрация
+        run: uv run leasing demo

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Сервис скоринга банка-партнёра: SOAP 1.1, document/literal. -->
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  xmlns:tns="http://example.org/scoring/v1"
+                  targetNamespace="http://example.org/scoring/v1"
+                  name="CreditScoring">
+
+  <wsdl:types>
+    <xs:schema>
+      <xs:import namespace="http://example.org/scoring/v1" schemaLocation="scoring.xsd"/>
+    </xs:schema>
+  </wsdl:types>
+
+  <wsdl:message name="SubmitApplicationIn"><wsdl:part name="body" element="tns:SubmitApplicationRequest"/></wsdl:message>
+  <wsdl:message name="SubmitApplicationOut"><wsdl:part name="body" element="tns:SubmitApplicationResponse"/></wsdl:message>
+  <wsdl:message name="GetDecisionIn"><wsdl:part name="body" element="tns:GetDecisionRequest"/></wsdl:message>
+  <wsdl:message name="GetDecisionOut"><wsdl:part name="body" element="tns:GetDecisionResponse"/></wsdl:message>
+  <wsdl:message name="ScoringFaultMessage"><wsdl:part name="fault" element="tns:ScoringFault"/></wsdl:message>
+
+  <wsdl:portType name="ScoringPortType">
+    <wsdl:operation name="SubmitApplication">
+      <wsdl:documentation>Принять заявку на скоринг (FR-04). Повтор с тем же requestId возвращает ту же заявку с duplicate=true.</wsdl:documentation>
+      <wsdl:input message="tns:SubmitApplicationIn"/>
+      <wsdl:output message="tns:SubmitApplicationOut"/>
+      <wsdl:fault name="ScoringFault" message="tns:ScoringFaultMessage"/>
+    </wsdl:operation>
+    <wsdl:operation name="GetDecision">
+      <wsdl:documentation>Решение по заявке (FR-07): IN_REVIEW, пока банк думает; потом APPROVED или DECLINED.</wsdl:documentation>
+      <wsdl:input message="tns:GetDecisionIn"/>
+      <wsdl:output message="tns:GetDecisionOut"/>
+      <wsdl:fault name="ScoringFault" message="tns:ScoringFaultMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="ScoringBinding" type="tns:ScoringPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="SubmitApplication">
+      <soap:operation soapAction="http://example.org/scoring/v1/SubmitApplication"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="ScoringFault"><soap:fault name="ScoringFault" use="literal"/></wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="GetDecision">
+      <soap:operation soapAction="http://example.org/scoring/v1/GetDecision"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="ScoringFault"><soap:fault name="ScoringFault" use="literal"/></wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="ScoringService">
+    <wsdl:port name="ScoringPort" binding="tns:ScoringBinding">
+      <soap:address location="http://127.0.0.1:8070/scoring"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

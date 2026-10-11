@@ -1,0 +1,35 @@
+@startuml use-case
+' Диаграмма вариантов использования: кто и зачем пользуется шлюзом.
+' req: FR-01 FR-03 FR-06 FR-07 FR-10
+!pragma layout smetana
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "Менеджер по лизингу" as manager
+actor "CRM" as crm <<система>>
+actor "Руководитель продаж" as head
+actor "Планировщик" as cron <<система>>
+actor "Банк-партнёр" as bank <<система>>
+
+manager -- crm
+
+rectangle "Шлюз заявок на лизинг" {
+  usecase "Подать заявку" as UC1
+  usecase "Проверить поля\nдо банка" as UC2
+  usecase "Повторить запрос\nбез дубля" as UC3
+  usecase "Узнать статус\nи решение" as UC4
+  usecase "Повторить отправку\nв банк" as UC5
+  usecase "Построить отчёт" as UC6
+}
+
+crm --> UC1
+crm --> UC3
+crm --> UC4
+UC1 ..> UC2 : <<include>>
+cron --> UC5
+head --> UC6
+UC1 --> bank
+UC4 --> bank
+UC5 --> bank
+@enduml

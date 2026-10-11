@@ -1,0 +1,55 @@
+@startuml class-domain
+' Диаграмма классов: предметная область шлюза (таблицы sql/schema.sql).
+' req: FR-01 FR-08 FR-09
+!pragma layout smetana
+skinparam shadowing false
+hide empty methods
+
+enum AssetType {
+  CAR
+  TRUCK
+  EQUIPMENT
+}
+
+enum Status {
+  NEW
+  SENT
+  APPROVED
+  DECLINED
+  INVALID
+  WAITING_RETRY
+  FAILED
+}
+
+class Application <<applications>> {
+  id : LA-000001
+  idempotencyKey : UUID
+  inn : строка, 10 цифр
+  companyName : строка 1..200
+  assetType : AssetType
+  amount : целое 100 000..50 000 000
+  advancePercent : целое 10..49
+  termMonths : целое 12..60
+  status : Status
+  bankId : SC-00000001 [0..1]
+  attempts : целое
+}
+
+class Decision {
+  approvedAmount : целое [0..1]
+  ratePercent : число [0..1]
+  reasonCode : строка [0..1]
+}
+
+class StatusChange <<status_history>> {
+  from : Status [0..1]
+  to : Status
+  at : дата-время
+  note : строка [0..1]
+}
+
+Application "1" *-- "0..1" Decision : решение банка
+Application "1" *-- "1..*" StatusChange : история
+Application --> AssetType
+Application --> Status
+@enduml

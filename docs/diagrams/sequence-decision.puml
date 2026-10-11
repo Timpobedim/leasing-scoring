@@ -1,0 +1,32 @@
+@startuml sequence-decision
+' Диаграмма последовательности: статус заявки и решение банка.
+' req: FR-07 FR-08 FR-09
+skinparam shadowing false
+autonumber
+
+participant "CRM" as crm
+participant "Шлюз" as gw
+database "SQLite" as db
+participant "Банк\n(SOAP)" as bank
+
+crm -> gw : GET /api/v1/applications/{id}
+gw -> db : SELECT заявки
+alt заявки нет
+  gw --> crm : 404
+else статус SENT
+  gw -> bank : GetDecision(applicationId)
+  alt банк ещё думает
+    bank --> gw : status = IN_REVIEW
+    gw --> crm : 200 {status: SENT}
+  else решение есть
+    bank --> gw : APPROVED (approvedAmount, ratePercent)\nили DECLINED (reasonCode)
+    gw -> db : SENT → APPROVED | DECLINED + история
+    gw --> crm : 200 {status, decision}
+  else банк недоступен
+    bank --> gw : таймаут
+    gw --> crm : 200 {status: SENT} — статус не меняется
+  end
+else любой другой статус
+  gw --> crm : 200 {status}
+end
+@enduml

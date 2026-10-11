@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Сервис скоринга банка-партнёра: типы сообщений.
+  Банк и его правила вымышлены; их поведение описано в docs/srs.md, приложение А.
+  Ограничения полей обязаны совпадать с api/openapi.yaml (NFR-03, проверяется тестом).
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://example.org/scoring/v1"
+           targetNamespace="http://example.org/scoring/v1"
+           elementFormDefault="qualified">
+
+  <xs:simpleType name="RequestId">
+    <xs:annotation><xs:documentation>Ключ идемпотентности: повтор с тем же ключом не создаёт вторую заявку</xs:documentation></xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Inn">
+    <xs:annotation><xs:documentation>ИНН юридического лица; контрольная цифра проверяется сервисом, не схемой</xs:documentation></xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9]{10}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CompanyName">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <xs:maxLength value="200"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="AssetType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CAR"/>
+      <xs:enumeration value="TRUCK"/>
+      <xs:enumeration value="EQUIPMENT"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Amount">
+    <xs:annotation><xs:documentation>Стоимость предмета лизинга, целые рубли</xs:documentation></xs:annotation>
+    <xs:restriction base="xs:int">
+      <xs:minInclusive value="100000"/>
+      <xs:maxInclusive value="50000000"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="AdvancePercent">
+    <xs:restriction base="xs:int">
+      <xs:minInclusive value="10"/>
+      <xs:maxInclusive value="49"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TermMonths">
+    <xs:restriction base="xs:int">
+      <xs:minInclusive value="12"/>
+      <xs:maxInclusive value="60"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ApplicationId">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="SC-[0-9]{8}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Status">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="RECEIVED"/>
+      <xs:enumeration value="IN_REVIEW"/>
+      <xs:enumeration value="APPROVED"/>
+      <xs:enumeration value="DECLINED"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ReasonCode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="STOP_LIST"/>
+      <xs:enumeration value="ADVANCE_TOO_LOW"/>
+      <xs:enumeration value="TERM_TOO_LONG"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="FaultCode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="VALIDATION"/>
+      <xs:enumeration value="CONFLICT"/>
+      <xs:enumeration value="NOT_FOUND"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:element name="SubmitApplicationRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="requestId" type="tns:RequestId"/>
+        <xs:element name="inn" type="tns:Inn"/>
+        <xs:element name="companyName" type="tns:CompanyName"/>
+        <xs:element name="assetType" type="tns:AssetType"/>
+        <xs:element name="amount" type="tns:Amount"/>
+        <xs:element name="advancePercent" type="tns:AdvancePercent"/>
+        <xs:element name="termMonths" type="tns:TermMonths"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="SubmitApplicationResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="applicationId" type="tns:ApplicationId"/>
+        <xs:element name="status" type="tns:Status"/>
+        <xs:element name="duplicate" type="xs:boolean"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="GetDecisionRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="applicationId" type="tns:ApplicationId"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="GetDecisionResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="applicationId" type="tns:ApplicationId"/>
+        <xs:element name="status" type="tns:Status"/>
+        <xs:element name="approvedAmount" type="xs:int" minOccurs="0"/>
+        <xs:element name="ratePercent" type="xs:decimal" minOccurs="0"/>
+        <xs:element name="reasonCode" type="tns:ReasonCode" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ScoringFault">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="code" type="tns:FaultCode"/>
+        <xs:element name="field" type="xs:string" minOccurs="0"/>
+        <xs:element name="message" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

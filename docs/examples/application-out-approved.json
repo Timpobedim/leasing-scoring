@@ -1,0 +1,11 @@
+{
+  "id": "LA-000001",
+  "status": "APPROVED",
+  "bankId": "SC-00000001",
+  "attempts": 1,
+  "decision": {
+    "approvedAmount": 2400000,
+    "ratePercent": 15.5,
+    "reasonCode": null
+  }
+}

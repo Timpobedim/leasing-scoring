@@ -1,0 +1,31 @@
+@startuml component
+' Диаграмма компонентов: из чего состоит решение и по каким протоколам связано.
+' req: FR-04 FR-06 FR-10 NFR-01 NFR-02
+!pragma layout smetana
+skinparam shadowing false
+
+node "CRM лизинговой компании" {
+  [CRM] as crm
+}
+
+node "Шлюз" {
+  [REST API\nFastAPI] as api
+  [Жизненный цикл\nзаявки] as gw
+  [Клиент скоринга\nzeep] as client
+  [Задача retry] as retry
+  database "SQLite\napplications,\nstatus_history" as db
+  [Отчёты\nsql/reports.sql] as reports
+}
+
+node "Банк-партнёр" {
+  [Сервис скоринга\nSOAP 1.1] as bank
+}
+
+crm --> api : HTTP/JSON\nopenapi.yaml
+api --> gw
+retry --> gw : по расписанию
+gw --> db
+gw --> client
+client --> bank : SOAP/XML\nscoring.wsdl, таймаут 5 с
+reports --> db : SQL
+@enduml

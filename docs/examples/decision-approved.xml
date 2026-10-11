@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://example.org/scoring/v1">
+  <soap:Body>
+    <tns:GetDecisionResponse>
+      <tns:applicationId>SC-00000001</tns:applicationId>
+      <tns:status>APPROVED</tns:status>
+      <tns:approvedAmount>2400000</tns:approvedAmount>
+      <tns:ratePercent>15.5</tns:ratePercent>
+    </tns:GetDecisionResponse>
+  </soap:Body>
+</soap:Envelope>

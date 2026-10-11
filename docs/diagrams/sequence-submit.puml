@@ -1,0 +1,33 @@
+@startuml sequence-submit
+' Диаграмма последовательности: подача заявки и три ответа банка.
+' req: FR-01 FR-03 FR-04 FR-05 FR-06 NFR-01
+skinparam shadowing false
+autonumber
+
+participant "CRM" as crm
+participant "Шлюз" as gw
+database "SQLite" as db
+participant "Банк\n(SOAP)" as bank
+
+crm -> gw : POST /api/v1/applications\nIdempotency-Key: <uuid>
+gw -> gw : проверка полей и ИНН (FR-02)
+gw -> db : INSERT заявки NEW + история
+gw -> bank : SubmitApplication(requestId = <uuid>)\nтаймаут 5 с
+alt банк принял
+  bank --> gw : SubmitApplicationResponse(applicationId, RECEIVED)
+  gw -> db : NEW → SENT
+  gw --> crm : 202 {status: SENT}
+else Fault VALIDATION (ИНН нет в ЕГРЮЛ)
+  bank --> gw : soap:Fault / ScoringFault(VALIDATION, inn)
+  gw -> db : NEW → INVALID
+  gw --> crm : 422 {field: inn}
+else таймаут или 503
+  bank --> gw : нет ответа за 5 с
+  gw -> db : NEW → WAITING_RETRY
+  gw --> crm : 202 {status: WAITING_RETRY}
+  ... по расписанию: leasing retry ...
+  gw -> bank : SubmitApplication(тот же requestId)
+  bank --> gw : тот же applicationId, duplicate = true
+  gw -> db : WAITING_RETRY → SENT
+end
+@enduml
